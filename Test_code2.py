@@ -10,7 +10,6 @@ from openpyxl import Workbook
 
 
 # Configuration du port série
-port = 'COM6'  # Remplacez COM6 par le port utilisé par votre Arduino
 baudrate = 9600
 duration = 10  # Durée d'acquisition en secondes
 
@@ -39,8 +38,18 @@ def start_countdown(time_left):
 def record_data():
     data = []
     time1 =[]
+    
+    nom = entry_nom.get().strip()
+    prenom = entry_prenom.get().strip()
+    essai = entry_essai.get().strip()
+    port_com = entry_port_com.get().strip()
+    
+    if not nom or not prenom or not essai or not port_com:
+        messagebox.showerror("Erreur", "Tous les champs sont obligatoires !")
+        return
+    
     # Initialisation du port série
-    ser = serial.Serial(port, baudrate, timeout=1)
+    ser = serial.Serial(port_com, baudrate, timeout=1)
     print("Acquisition en cours...")
 
     # Enregistrement des données
@@ -61,14 +70,7 @@ def record_data():
     # Appeler la fonction pour compter les pics
     peaks_count = count_peaks(data, seuil_min=15)  # Distance minimale = 50 indices
     
-    nom = entry_nom.get().strip()
-    prenom = entry_prenom.get().strip()
-    essai = entry_essai.get().strip()
-    port_com = entry_port_com.get().strip()
 
-    if not nom or not prenom or not essai or not port_com:
-        messagebox.showerror("Erreur", "Tous les champs sont obligatoires !")
-        return
     
     fichier_nom = f"{nom}_{prenom}_Essai{essai}.xlsx"
     vec_temps = [x - time1[0] for x in time1]

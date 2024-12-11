@@ -12,11 +12,16 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import threading
 from tkinter import messagebox
+from openpyxl import Workbook
+
+
 
 # Configuration du port série
 port = 'COM6'  # Remplacez COM6 par le port utilisé par votre Arduino
 baudrate = 9600
 duration = 10  # Durée d'acquisition en secondes
+data = []
+time1 =[]
 
 # Fonction pour démarrer le décompte et l'enregistrement simultanément
 def start_acquisition():
@@ -40,21 +45,21 @@ def start_countdown(time_left):
 
 # Fonction pour enregistrer les données
 def record_data():
+    global data
+    global time1
     # Initialisation du port série
     ser = serial.Serial(port, baudrate, timeout=1)
-
     print("Acquisition en cours...")
 
     # Enregistrement des données
     start_time = time.time()
-    data = []
     
     try:
-        while time.time() - start_time < duration:
+        while time.time() - start_time < duration:  # Assure une durée de 10 secondes
             line = ser.readline().decode('utf-8').strip()  # Lecture d'une ligne
             if line.isdigit():  # Vérifie si la ligne contient une valeur numérique
                 data.append(int(line))  # Stocke la valeur
-                print (data[-1])
+                time1.append(time.time())  # Stocke la valeur
     except KeyboardInterrupt:
         print("Acquisition interrompue.")
     
@@ -65,38 +70,34 @@ def record_data():
     with open("fsr_data.csv", "w") as f:
         f.write("Time,Value\n")
         for i, value in enumerate(data):
-            f.write(f"{time.time()},{value}\n")  # Suppose un échantillonnage de 280 Hz (ou ajustez selon votre cas)
+            f.write(f"{i/232},{value}\n")  # Suppose un échantillonnage de 280 Hz (ou ajustez selon votre cas)
 
     # Charger les données et afficher le graphique
-    data = pd.read_csv("fsr_data.csv")
+    data1 = pd.read_csv("fsr_data.csv")
     
     # Afficher les données dans un graphique
-    plt.plot(data["Time"], data["Value"])
+    plt.plot(data1["Time"], data1["Value"])
     plt.xlabel("Temps (s)")
     plt.ylabel("Valeur du capteur")
     plt.title("Données FSR")
     plt.show()  # Affiche le graphique
 
     # Appeler la fonction pour compter les pics
-    peaks_count = count_peaks(data["Value"].tolist(), threshold=20, min_distance=50)  # Seuil = 20 et distance minimale = 50 indices
+    peaks_count = count_peaks(data1["Value"].tolist(), seuil_min=15)  # Distance minimale = 50 indices
     
     # Afficher le nombre de pics trouvés
     print(f"Nombre de pics trouvés : {peaks_count}")
-    messagebox.showinfo("Résultat", f"Nombre de pics trouvés : {peaks_count}")
+    messagebox.showinfo("Résultat", f"Nombre de clics :{peaks_count}")
 
 # Fonction pour compter le nombre de pics au-dessus d'un seuil donné
 # Ajout d'un paramètre min_distance pour fusionner les pics proches
-def count_peaks(data, threshold=20, min_distance=50):
+def count_peaks(data, seuil_min=15):
     peaks_count = 0
-    last_peak = None  # Garder une trace du dernier pic trouvé
 
     for i in range(1, len(data) - 1):
         # Condition pour un pic (plus grand que ses voisins)
-        if data[i] > data[i - 1] and data[i] > data[i + 1] and data[i] > threshold:
-            # Vérifier si le pic est assez éloigné du dernier pic trouvé
-            if last_peak is None or (i - last_peak) > min_distance:
-                peaks_count += 1  # Un nouveau pic est trouvé
-                last_peak = i  # Met à jour la position du dernier pic
+        if data[i] > data[i - 1] and data[i] > seuil_min and data[i-1] < seuil_min:
+            peaks_count += 1  # Un nouveau pic est trouvé
 
     return peaks_count
 
@@ -105,7 +106,7 @@ root = tk.Tk()
 root.title("Acquisition FSR")
 
 # Création du label pour afficher le décompte
-time_label = tk.Label(root, text="Temps restant : 10 secondes", font=("Arial", 16))
+time_label = tk.Label(root, text=f"Temps restant : {duration} secondes", font=("Arial", 16))
 time_label.pack(pady=20)
 
 # Création du bouton "Démarrer"
@@ -114,7 +115,3 @@ start_button.pack(pady=20)
 
 # Lancer l'interface
 root.mainloop()
-
-
-
-
