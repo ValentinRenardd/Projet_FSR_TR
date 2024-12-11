@@ -6,7 +6,7 @@ import time
 import matplotlib.pyplot as plt
 import pandas as pd
 import threading
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from openpyxl import Workbook
 
 
@@ -43,7 +43,7 @@ def record_data():
     nom = entry_nom.get().strip()
     prenom = entry_prenom.get().strip()
     essai = entry_essai.get().strip()
-    port_com = entry_port_com.get().strip()
+    port_com = combo_ports.get().strip()
     
     if not nom or not prenom or not essai or not port_com:
         messagebox.showerror("Erreur", "Tous les champs sont obligatoires !")
@@ -129,6 +129,15 @@ def count_peaks(data, seuil_min=15):
 
     return peaks_count
 
+# Fonction pour actualiser la liste des ports COM
+def refresh_ports():
+    ports = [port.device for port in serial.tools.list_ports.comports()]
+    combo_ports['values'] = ports
+    if ports:
+        combo_ports.current(0)
+    else:
+        combo_ports.set("Aucun port détecté")
+
     
 # Création de la fenêtre principale
 root = tk.Tk()
@@ -151,8 +160,9 @@ entry_essai.grid(row=2, column=1, padx=10, pady=5)
 
 # Port COM
 tk.Label(root, text="Port COM :").grid(row=3, column=0, padx=10, pady=5, sticky="e")
-entry_port_com = tk.Entry(root)
-entry_port_com.grid(row=3, column=1, padx=10, pady=5)
+combo_ports = ttk.Combobox(root, state="readonly", width=30)
+combo_ports.grid(row=3, column=1, padx=10, pady=5)
+refresh_ports()
 
 # Bouton Soumettre
 submit_button = tk.Button(root, text="Démarrer", command=start_acquisition)
