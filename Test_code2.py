@@ -1,3 +1,4 @@
+# Ne pas oublier d'installer pyserial et serial et autres si besoin...
 import numpy as np
 import tkinter as tk
 import serial
