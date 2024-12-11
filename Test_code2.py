@@ -2,6 +2,7 @@
 import numpy as np
 import tkinter as tk
 import serial
+import serial.tools.list_ports
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -10,7 +11,7 @@ from tkinter import messagebox, ttk
 from openpyxl import Workbook
 
 
-# Configuration du port série
+# Configuration du port sériesssssss
 baudrate = 9600
 duration = 10  # Durée d'acquisition en secondes
 
